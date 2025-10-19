@@ -9,7 +9,14 @@
 	"compatibility_date": "2025-10-11",
 	"observability": {
 		"enabled": true
-	}
+	},
+	// KV namespace bindings
+	"kv_namespaces": [
+		{
+		"binding": "KV",          // the variable your Worker code uses
+		"id": "7f4aef95d2164b5c90a4ba326c715174" // replace with your actual KV namespace ID
+		}
+	]
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
