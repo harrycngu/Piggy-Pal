@@ -1,13 +1,24 @@
-// app/pig.tsx
 import { useEffect, useRef, useState } from "react";
 import { View, Text, Image, ImageBackground, Pressable, StyleSheet, Animated } from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { usePig } from "./state/PigStore";
+import type { ItemId } from "./state/PigStore";
 
-// assets (update paths if yours differ)
-const PIG_1 = require("../assets/images/pigEyesOpen.png");
-const PIG_2 = require("../assets/images/pigEyesClosed.png");
+
+const MName = (null as unknown) as React.ComponentProps<typeof MaterialCommunityIcons>["name"];
+const PIG_1  = require("../assets/images/pigEyesOpen.png");
+const PIG_2  = require("../assets/images/pigEyesClosed.png");
+const PIG_PANTS = require("../assets/images/pigPantsEquipped.png"); 
+const PIG_BOWTIE = require("../assets/images/pigbowTieEquipped.png");
 const BG_ROOM = require("../assets/images/pixelBedroom.png");
+const PIG_GLASSES = require("../assets/images/pigGlassesEquipped.png");
+
 
 export default function PigScreen() {
+  const router = useRouter();
+  const { tokens, equipped, earnTokens } = usePig();
+
   // blink
   const [frame, setFrame] = useState(0);
   useEffect(() => {
@@ -32,8 +43,34 @@ export default function PigScreen() {
   const [energy, setEnergy] = useState(70);
   const clamp = (v: number) => Math.max(0, Math.min(100, v));
 
+  const equippedId =
+  (equipped.values().next().value as ItemId | undefined) || undefined;
+
+  const pigSprite =
+    equippedId === "pants"   ? PIG_PANTS :
+    equippedId === "bowTie"  ? PIG_BOWTIE :
+    equippedId === "glasses" ? PIG_GLASSES :
+    (frame === 0 ? PIG_1 : PIG_2);
+
   return (
     <ImageBackground source={BG_ROOM} style={s.bg} resizeMode="cover">
+      {/* Top bar: coins + icons */}
+      <View style={s.topBar}>
+        <View style={s.coinPill}>
+          <MaterialCommunityIcons name={"currency-usd-circle" as typeof MName} size={18} />
+          <Text style={s.coinText}>{tokens}</Text>
+        </View>
+
+        <View style={s.topIcons}>
+          <Pressable onPress={() => router.push("/inventory")} style={s.iconBtn} accessibilityLabel="Open inventory">
+            <Ionicons name="briefcase" size={22} />
+          </Pressable>
+          <Pressable onPress={() => router.push("/shop")} style={s.iconBtn} accessibilityLabel="Open shop">
+            <Ionicons name="cart" size={22} />
+          </Pressable>
+        </View>
+      </View>
+
       <Text style={s.title}>YOUR PIG</Text>
 
       <View style={s.panel}>
@@ -47,21 +84,17 @@ export default function PigScreen() {
       {/* Grounded pig area */}
       <View style={s.room}>
         <Animated.View style={[s.pigGroup, { transform: [{ translateY: bob }] }]}>
-          <Image
-            source={frame === 0 ? PIG_1 : PIG_2}
-            style={s.pig}
-            resizeMode="contain"   
-          />
+          <Image source={pigSprite} style={s.pig} resizeMode="contain" />
         </Animated.View>
       </View>
 
       {/* Actions */}
       <View style={s.actionsRow}>
-        <PixelButton label="FEED"  onPress={() => setHunger(v => clamp(v + 18))} color="#FF7BA3" />
+        <PixelButton label="FEED"  onPress={() => { setHunger(v => clamp(v + 18)); earnTokens(1); }} color="#FF7BA3" />
         <View style={s.sp10} />
-        <PixelButton label="WASH"  onPress={() => setClean (v => clamp(v + 18))} color="#7BD0FF" />
+        <PixelButton label="WASH"  onPress={() => { setClean (v => clamp(v + 18)); earnTokens(1); }} color="#7BD0FF" />
         <View style={s.sp10} />
-        <PixelButton label="SLEEP" onPress={() => setEnergy(v => clamp(v + 22))} color="#C2F261" />
+        <PixelButton label="SLEEP" onPress={() => { setEnergy(v => clamp(v + 22)); earnTokens(1); }} color="#C2F261" />
       </View>
 
       <Text style={s.hint}>EARN 🪙 BY FINISHING CHORES!</Text>
@@ -91,100 +124,57 @@ function PixelButton({ label, onPress, color }: { label: string; onPress: () => 
   );
 }
 
-const PX = {
-  dark:  "#0F172A",
-  panel: "#E9F2FF",
-};
+const PX = { dark: "#0F172A", panel: "#E9F2FF" };
 
 const s = StyleSheet.create({
-  bg: { flex: 1, alignItems: "center", paddingTop: 16 },
-  title: {
-    // fontFamily: "PressStart2P_400Regular", // uncomment if you've loaded it
-    fontSize: 14,
-    color: PX.dark,
-    marginBottom: 8,
+  bg: { flex: 1, alignItems: "center", paddingTop: 8 },
+
+  topBar: {
+    width: "100%",
+    paddingHorizontal: 12,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 6,
   },
+  coinPill: {
+    flexDirection: "row",
+    gap: 6,
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 3, borderColor: PX.dark,
+    paddingVertical: 6, paddingHorizontal: 10,
+  },
+  coinText: { fontSize: 12, color: PX.dark },
+
+  topIcons: { flexDirection: "row", gap: 10 },
+  iconBtn: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 3, borderColor: PX.dark,
+    padding: 6,
+  },
+
+  title: { fontSize: 14, color: PX.dark, marginVertical: 8 },
 
   panel: {
-    width: 320,
-    backgroundColor: PX.panel,
-    borderWidth: 4,
-    borderColor: PX.dark,
-    padding: 10,
+    width: 320, backgroundColor: PX.panel,
+    borderWidth: 4, borderColor: PX.dark, padding: 10,
   },
-  statLabel: {
-    // fontFamily: "PressStart2P_400Regular",
-    fontSize: 10,
-    color: PX.dark,
-    marginBottom: 4,
-  },
-  barBg: {
-    height: 12,
-    borderWidth: 3,
-    borderColor: PX.dark,
-    backgroundColor: "#FFFFFF",
-  },
+  statLabel: { fontSize: 10, color: PX.dark, marginBottom: 4 },
+  barBg: { height: 12, borderWidth: 3, borderColor: PX.dark, backgroundColor: "#FFF" },
   barFill: { height: "100%" },
-  statVal: {
-    marginTop: 4,
-    // fontFamily: "PressStart2P_400Regular",
-    fontSize: 10,
-    color: PX.dark,
-  },
+  statVal: { marginTop: 4, fontSize: 10, color: PX.dark },
 
-  // spacing helpers
-  sp8: { height: 8 },
-  sp10:{ width: 10 },
+  sp8: { height: 8 }, sp10:{ width: 10 },
 
-  room: {
-    flex: 1,
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  pigGroup: {
-    alignItems: "center",
-    marginBottom: -350, 
-  },
-  pig: {
-    width: 1000,     // scale by an integer for crisp pixels
-    height: 1000,
-  },
-  shadow: {
-    width: 140,
-    height: 16,
-    backgroundColor: "rgba(0,0,0,0.15)",
-    borderRadius: 8,
-    alignSelf: "center",
-    marginBottom: -8,
-  },
+  room: { flex: 1, width: "100%", alignItems: "center", justifyContent: "flex-end" },
+  pigGroup: { alignItems: "center", marginBottom: -350 },
+  pig: { width: 1000, height: 1000 },
 
-  actionsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-    marginBottom: 6,
-  },
+  actionsRow: { flexDirection: "row", alignItems: "center", marginTop: 12, marginBottom: 6 },
   btn: { borderWidth: 4, borderColor: PX.dark, padding: 0 },
-  btnInner: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderLeftWidth: 4,
-    borderTopWidth: 4,
-    borderRightWidth: 4,
-    borderBottomWidth: 4,
-    borderColor: "#FFFFFF",
-  },
-  btnText: {
-    // fontFamily: "PressStart2P_400Regular",
-    fontSize: 10,
-    color: PX.dark,
-  },
-
-  hint: {
-    marginBottom: 12,
-    // fontFamily: "PressStart2P_400Regular",
-    fontSize: 9,
-    color: PX.dark,
-  },
+  btnInner: { paddingVertical: 10, paddingHorizontal: 12, borderWidth: 4, borderColor: "#FFFFFF" },
+  btnText: { fontSize: 10, color: PX.dark },
+  hint: { marginBottom: 12, fontSize: 9, color: PX.dark },
 });
+
