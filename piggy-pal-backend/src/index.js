@@ -118,6 +118,7 @@ export default {
     }
 
     // ---------- Chore Endpoints ----------
+    // Parents adding chores
     if (url.pathname === "/chores/add" && request.method === "POST") {
       const { childId, title, reward } = await request.json();
       const choreId = `chore${Date.now()}`;
@@ -125,7 +126,8 @@ export default {
       await env.KV.put(`chore:${choreId}`, JSON.stringify(chore));
       return respondJSON(chore, 201);
     }
-
+    
+    // Completes chores for child
     if (url.pathname.startsWith("/chores/") && url.pathname.endsWith("/complete") && request.method === "POST") {
       const choreId = url.pathname.split("/")[2];
       const choreJson = await env.KV.get(`chore:${choreId}`);
@@ -138,6 +140,26 @@ export default {
       return respondJSON(chore);
     }
 
+    // Gets list of childs' chores
+    if (url.pathname.startsWith("/chores/") && request.method === "GET") {
+      const pathParts = url.pathname.split("/");
+      const childId = pathParts[2]; // /chores/:childId
+
+      // List all keys in KV
+      const list = await env.KV.list({ prefix: "chore:" });
+      const chores = [];
+
+      for (const key of list.keys) {
+        const choreJson = await env.KV.get(key.name);
+        if (choreJson) {
+          const chore = JSON.parse(choreJson);
+          if (chore.childId === childId) chores.push(chore);
+        }
+      }
+
+      return respondJSON(chores);
+    }
+    // Parents approve chores
     if (url.pathname.startsWith("/chores/") && url.pathname.endsWith("/approve") && request.method === "POST") {
       const choreId = url.pathname.split("/")[2];
       const choreJson = await env.KV.get(`chore:${choreId}`);
@@ -159,5 +181,6 @@ export default {
 
     return new Response("Not found", { status: 404, headers: corsHeaders });
   },
+  
 };
 
