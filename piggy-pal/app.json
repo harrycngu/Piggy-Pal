@@ -1,4 +1,5 @@
 {
+  
   "expo": {
     "name": "piggy-pal",
     "slug": "piggy-pal",
@@ -38,7 +39,8 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
