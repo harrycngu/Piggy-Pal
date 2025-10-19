@@ -59,7 +59,39 @@ export default {
         })
       );
     }
+    // USE TO RESET TEST PARENT/CHILD DATA
+    // // Reset parent
+    // await env.KV.put(
+    //   testParentKey,
+    //   JSON.stringify({
+    //     id: "parent1",
+    //     email: "test@example.com",
+    //     passwordHash: "1234",
+    //     children: ["child1"],
+    //   })
+    // );
 
+    // // Reset child
+    // await env.KV.put(
+    //   testChildKey,
+    //   JSON.stringify({
+    //     id: "child1",
+    //     name: "Alice",
+    //     balance: 50, // reset balance
+    //   })
+    // );
+
+    // // Clear all chores for child1
+    // const choreList = await env.KV.list({ prefix: "chore:" });
+    // for (const key of choreList.keys) {
+    //   const choreJson = await env.KV.get(key.name);
+    //   if (choreJson) {
+    //     const chore = JSON.parse(choreJson);
+    //     if (chore.childId === "child1") {
+    //       await env.KV.delete(key.name);
+    //     }
+    //   }
+    // }
     // ---------- Parent Endpoints ----------
     if (url.pathname === "/signup" && request.method === "POST") {
       const { email, password } = await request.json();
