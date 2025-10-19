@@ -15,7 +15,7 @@ export default function Home() {
       <Text style={styles.balance}>Balance: $25.00</Text>
 
     {/* Nav Bar */}
-    <View style={s.nav}>
+    {/* <View style={s.nav}>
         <NavItem
           label="Home"
           active
@@ -33,7 +33,7 @@ export default function Home() {
           label="Parents"
           icon={<Ionicons name="person-circle-outline" size={22} color="#000" />}
         />
-      </View>
+      </View> */}
     </View>
   );
 }
