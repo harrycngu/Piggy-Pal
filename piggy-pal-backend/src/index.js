@@ -11,6 +11,26 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+
+    // --- CORS setup ---
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    };
+
+    // Handle preflight (OPTIONS)
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    // Helper for consistent JSON responses with CORS
+    const respondJSON = (body, status = 200) =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+
     // --- Pre-populate KV for testing ---
     const testParentKey = "parent:test@example.com";
     const testChildKey = "child:child1";
@@ -22,8 +42,8 @@ export default {
         JSON.stringify({
           id: "parent1",
           email: "test@example.com",
-          passwordHash: "1234", // plain text for testing
-          children: ["child1"]
+          passwordHash: "1234",
+          children: ["child1"],
         })
       );
     }
@@ -35,62 +55,56 @@ export default {
         JSON.stringify({
           id: "child1",
           name: "Alice",
-          balance: 50
+          balance: 50,
         })
       );
     }
-    // --- End pre-populate ---
 
-    /** ----------------- Parent Endpoints ----------------- */
-
-    // Parent signup
+    // ---------- Parent Endpoints ----------
     if (url.pathname === "/signup" && request.method === "POST") {
       const { email, password } = await request.json();
       const existing = await env.KV.get(`parent:${email}`);
-      if (existing) return new Response("Parent already exists", { status: 400 });
+      if (existing) return new Response("Parent already exists", { status: 400, headers: corsHeaders });
 
       const id = `parent${Date.now()}`;
       await env.KV.put(
         `parent:${email}`,
         JSON.stringify({ id, email, passwordHash: password, children: [] })
       );
-      return new Response(JSON.stringify({ message: "Signed up!" }), { status: 201 });
+      return respondJSON({ message: "Signed up!" }, 201);
     }
 
-    // Parent login
     if (url.pathname === "/login" && request.method === "POST") {
       const { email, password } = await request.json();
       const parentJson = await env.KV.get(`parent:${email}`);
-      if (!parentJson) return new Response("Invalid login", { status: 401 });
+      if (!parentJson) return new Response("Invalid login", { status: 401, headers: corsHeaders });
 
       const parent = JSON.parse(parentJson);
       if (parent.passwordHash !== password)
-        return new Response("Invalid login", { status: 401 });
+        return new Response("Invalid login", { status: 401, headers: corsHeaders });
 
-      return new Response(JSON.stringify({ message: "Logged in" }), { status: 200, headers: { "Content-Type": "application/json" } });
+      return respondJSON({ message: "Logged in" });
     }
 
-    // Get all children for parent
     if (url.pathname === "/children" && request.method === "GET") {
-      const parentJson = await env.KV.get(testParentKey); // temp for testing
-      if (!parentJson) return new Response("Parent not found", { status: 404 });
+      const parentJson = await env.KV.get(testParentKey);
+      if (!parentJson) return new Response("Parent not found", { status: 404, headers: corsHeaders });
 
       const parent = JSON.parse(parentJson);
       const children = await Promise.all(
-        parent.children.map(async id => {
+        parent.children.map(async (id) => {
           const childJson = await env.KV.get(`child:${id}`);
           return childJson ? JSON.parse(childJson) : null;
         })
       );
 
-      return new Response(JSON.stringify(children), { status: 200, headers: { "Content-Type": "application/json" } });
+      return respondJSON(children);
     }
 
-    // Add a child
     if (url.pathname === "/children/add" && request.method === "POST") {
       const { parentEmail, childName } = await request.json();
       const parentJson = await env.KV.get(`parent:${parentEmail}`);
-      if (!parentJson) return new Response("Parent not found", { status: 404 });
+      if (!parentJson) return new Response("Parent not found", { status: 404, headers: corsHeaders });
 
       const parent = JSON.parse(parentJson);
       const childId = `child${Date.now()}`;
@@ -100,45 +114,39 @@ export default {
       parent.children.push(childId);
       await env.KV.put(`parent:${parentEmail}`, JSON.stringify(parent));
 
-      return new Response(JSON.stringify(newChild), { status: 201, headers: { "Content-Type": "application/json" } });
+      return respondJSON(newChild, 201);
     }
 
-    /** ----------------- Chore Endpoints ----------------- */
-
-    // Add a chore
+    // ---------- Chore Endpoints ----------
     if (url.pathname === "/chores/add" && request.method === "POST") {
       const { childId, title, reward } = await request.json();
       const choreId = `chore${Date.now()}`;
       const chore = { id: choreId, childId, title, reward, completed: false, approved: false, dateCreated: new Date().toISOString() };
       await env.KV.put(`chore:${choreId}`, JSON.stringify(chore));
-      return new Response(JSON.stringify(chore), { status: 201, headers: { "Content-Type": "application/json" } });
+      return respondJSON(chore, 201);
     }
 
-    // Child marks chore complete
     if (url.pathname.startsWith("/chores/") && url.pathname.endsWith("/complete") && request.method === "POST") {
       const choreId = url.pathname.split("/")[2];
       const choreJson = await env.KV.get(`chore:${choreId}`);
-      if (!choreJson) return new Response("Chore not found", { status: 404 });
+      if (!choreJson) return new Response("Chore not found", { status: 404, headers: corsHeaders });
 
       const chore = JSON.parse(choreJson);
       chore.completed = true;
       await env.KV.put(`chore:${choreId}`, JSON.stringify(chore));
 
-      return new Response(JSON.stringify(chore), { status: 200, headers: { "Content-Type": "application/json" } });
+      return respondJSON(chore);
     }
 
-    // Parent approves chore
     if (url.pathname.startsWith("/chores/") && url.pathname.endsWith("/approve") && request.method === "POST") {
       const choreId = url.pathname.split("/")[2];
       const choreJson = await env.KV.get(`chore:${choreId}`);
-      if (!choreJson) return new Response("Chore not found", { status: 404 });
+      if (!choreJson) return new Response("Chore not found", { status: 404, headers: corsHeaders });
 
       const chore = JSON.parse(choreJson);
-      if (!chore.completed) return new Response("Chore not completed yet", { status: 400 });
+      if (!chore.completed) return new Response("Chore not completed yet", { status: 400, headers: corsHeaders });
 
       chore.approved = true;
-
-      // Update child balance
       const childJson = await env.KV.get(`child:${chore.childId}`);
       const child = JSON.parse(childJson);
       child.balance += chore.reward;
@@ -146,9 +154,10 @@ export default {
       await env.KV.put(`child:${chore.childId}`, JSON.stringify(child));
       await env.KV.put(`chore:${choreId}`, JSON.stringify(chore));
 
-      return new Response(JSON.stringify({ chore, child }), { status: 200, headers: { "Content-Type": "application/json" } });
+      return respondJSON({ chore, child });
     }
 
-    return new Response("Not found", { status: 404 });
-  }
+    return new Response("Not found", { status: 404, headers: corsHeaders });
+  },
 };
+
