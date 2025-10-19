@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "expo": "^54.0.13",
     "itty-router": "^5.0.22"
   }
 }
