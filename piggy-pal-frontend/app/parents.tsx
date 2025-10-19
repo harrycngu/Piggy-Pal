@@ -1,10 +1,38 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Image } from 'react-native';
+import { View, Text, StyleSheet, Pressable, TextInput } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 
-export default function Chores() {
+export default function Parents() {
     return (
-        <Text>placeholder text</Text>
+    <View style={s.screen}>
+      {/* Title */}
+      <Text style={s.title}>Add Chore</Text>
+
+      {/* Example input fields */}
+      <View style={s.inputGroup}>
+        <Text style={s.label}>Chore</Text>
+        <TextInput 
+          style={s.input} 
+          placeholder="e.g., Clean room" 
+          placeholderTextColor="#A0AEC0"
+        />
+      </View>
+
+      <View style={s.inputGroup}>
+        <Text style={s.label}>Value</Text>
+        <TextInput 
+          style={s.input} 
+          placeholder="e.g., 5.00" 
+          placeholderTextColor="#A0AEC0"
+          keyboardType="email-address"
+        />
+      </View>
+
+      {/* Action button */}
+      <Pressable style={s.button}>
+        <Text style={s.buttonText}>Add Chore</Text>
+      </Pressable>
+    </View>
     );
 }
 
@@ -15,105 +43,42 @@ const s = StyleSheet.create({
     alignItems: "center",
   },
   title: {
-    marginTop: 24,
-    fontSize: 48, // Figma said 70px; mobile-friendly scale
+    marginTop: 70,
+    marginBottom: 20,
+    fontSize: 35, // Figma said 70px; mobile-friendly scale
     fontWeight: "800",
     color: "#000",
   },
-  pigWrap: {
-    marginTop: 24,
-    width: 220,
-    height: 200,
-    alignItems: "center",
-    justifyContent: "center",
+  inputGroup: {
+    marginBottom: 20,
   },
-  pigShadow: {
-    position: "absolute",
-    bottom: 0,
-    width: 150,
-    height: 25,
-    borderRadius: 13,
-    backgroundColor: "rgba(188,182,182,0.54)",
+  label: {
+    fontSize: 16,
+    fontWeight: "500",
+    marginBottom: 6,
+    color: "#4A5568",
   },
-  pigBody: {
-    width: 160,
-    height: 130,
-    backgroundColor: "#FFCBEC",
-    borderColor: "#000",
+  input: {
+    height: 50,
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
     borderWidth: 1,
-    borderRadius: 999,
+    borderColor: "#CBD5E0",
+  },
+  button: {
+    marginTop: "auto",
+    marginBottom: 20,
+    backgroundColor: "#0EA5E9",
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 15,
     alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#EBA4D1",
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
   },
-  pigEyeLeft: {
-    position: "absolute",
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-    backgroundColor: "#000",
-    left: 50,
-    top: 42,
-  },
-  pigEyeRight: {
-    position: "absolute",
-    width: 9,
-    height: 9,
-    borderRadius: 5,
-    backgroundColor: "#000",
-    left: 80,
-    top: 47,
-  },
-  pigSnout: {
-    position: "absolute",
-    width: 40,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#FFCBEC",
-    borderColor: "#000",
-    borderWidth: 1,
-    top: 70,
-  },
-  balance: {
-    marginTop: 24,
-    fontSize: 28,
+  buttonText: {
+    color: "#FFF",
+    fontSize: 18,
     fontWeight: "700",
-    color: "#000",
-  },
-  nav: {
-    position: "absolute",
-    bottom: 18,
-    left: 14,
-    right: 14,
-    height: 56,
-    borderRadius: 23,
-    backgroundColor: "#C3D9FF",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
-  },
-  navItem: { alignItems: "center", justifyContent: "center" },
-  iconWrap: { marginBottom: 2 },
-  navLabel: { fontSize: 12, color: "#000" },
+  }
 });
-
-function NavItem({
-  label,
-  icon,
-  active,
-  onPress,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  active?: boolean;
-  onPress?: () => void;
-}) {
-  return (
-    <Pressable onPress={onPress} style={s.navItem}>
-      <View style={s.iconWrap}>{icon}</View>
-      <Text style={[s.navLabel, active && { color: "#236BE8" }]}>{label}</Text>
-    </Pressable>
-  );
-}
