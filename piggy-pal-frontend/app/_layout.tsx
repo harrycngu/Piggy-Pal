@@ -1,18 +1,20 @@
+// app/_layout.tsx
 import { Tabs } from "expo-router";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { PigProvider } from "./state/PigStore"
 
 export default function Layout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarStyle: { height: 73, borderTopWidth: 0, backgroundColor: "#C3D9FF" },
+        tabBarStyle: { height: 56, borderTopWidth: 0, backgroundColor: "#C3D9FF" },
         tabBarActiveTintColor: "#236BE8",
         tabBarInactiveTintColor: "#000",
         headerShown: false,
       }}
     >
       <Tabs.Screen
-        name="home"
+        name="index"
         options={{
           title: "Home",
           tabBarIcon: ({ color }) => <Ionicons name="home" size={22} color={color} />,
